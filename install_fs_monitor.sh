@@ -1,6 +1,6 @@
 python-setuptools python-dev build-essential
-sudo pip install watchdog
 sudo easy_install pip
+sudo pip install watchdog
 touch fs_monitor.log
 sudo apt-get install supervisor
 sudo cp fs_monitor_supervisor.conf /etc/supervisor/conf.d/
