@@ -16,11 +16,12 @@ from watchdog.events import FileSystemEventHandler
 log_file_path = '/home/redroid/video_saves/redroid-fs-monitor/fs_monitor.log'
 video_save_path = '/home/redroid/video_saves/'
 index_flv_script_path = '/home/redroid/video_saves/redroid-fs-monitor/flvlib-0.1.7/scripts/index-flv'
+username = 'redroid'
 flv_regex = re.compile('\A.*(.flv)\Z')
 # public_webportal_path = '/home/redroid/webportal/public/videos/'
 
 def stream_incomplete(filepath):
-    print filepath
+    # print filepath
     temp_grep_file = filepath + '_grep.temp'
     grep_process = subprocess.call('sudo lsof | grep nginx >' + temp_grep_file, shell=True)
     with open(temp_grep_file, 'r') as grep_file:
@@ -50,6 +51,7 @@ def flv_thread_function(event):
         # create the folder here (do nothing if exists already)
         try:
             os.makedirs(video_save_path + directory_path)
+            os.chmod(video_save_path + directory_path, 0o777 )
             append_to_log('Created Directory: ' + video_save_path + directory_path)
             #os.makedirs(public_webportal_path + directory_path)
             #append_to_log('Created Directory: ' + public_webportal_path + directory_path)
@@ -62,6 +64,7 @@ def flv_thread_function(event):
                 time.sleep(5)
 
 
+            os.chmod(event.src_path, 0o666 )
             index_process = subprocess.Popen([index_flv_script_path, '-U', event.src_path])
             index_process.wait()
             # print 'after script'
@@ -73,6 +76,9 @@ def flv_thread_function(event):
             append_to_log('File Moved: ' + filename)
             os.symlink(video_save_path + directory_path + '/' + filename, video_save_path  + '/vod_links/' + filename)
             append_to_log('Symlink Created: ' + filename)
+            
+            # change file permissions (running this script as root.. I have no choice :( )
+            os.chmod(video_save_path  + '/vod_links/' + filename, 0o666 )
 
         except Exception as e:
             append_to_log('Error : ' + str(e))
